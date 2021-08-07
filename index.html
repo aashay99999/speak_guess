@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+   <style>
+
+
+/* * {
+  box-sizing: border-box;
+} */
+
+@import url('https://fonts.googleapis.com/css2?family=Averia+Serif+Libre:ital@1&display=swap');
+
+
+
+body {
+ 
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin: 0;
+  font-family: 'Averia Serif Libre', cursive;
+ 
+
+}
+
+#page{
+  border: 4px solid red ;
+  min-width: 50rem;
+  min-height: 30rem;
+
+}
+
+p {
+  line-height: 1.5;
+  margin: 0;
+}
+
+.play-again {
+  padding: 8px 15px;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+
+.msg {
+  font-size: 1.5em;
+  margin-top: 40px;
+}
+
+.box {
+  border: 1px solid red;
+  display: inline-block;
+  font-size: 30px;
+  margin: 20px;
+  padding: 10px;
+}
+
+
+
+   </style>
+   
+  </head>
+  <body>
+    <div id="page">
+      <br>
+      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQbDRymM3K3YHz7O85Sd3j5vxgj3ierJZRtLQ&usqp=CAU" href="" alt="Speak" />
+
+    <h1>Guess a Number Between 1 - 100</h1>
+    <br>
+
+    <strong>Speak the number into your microphone</strong>
+
+    <div id="msg"></div>
+
+       <script>
+const msg1 = document.getElementById('msg');
+
+const randomNum = getRandomNumber();
+
+console.log('Number:', randomNum);
+
+window.SpeechRecognition =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
+
+let recognition = new window.SpeechRecognition();
+
+
+recognition.start();
+
+
+function onSpeak(e) {
+  const msg = e.results[0][0].transcript;
+
+  message(msg);
+  checkno(msg);
+}
+
+
+function message(msg) {
+  msg1.innerHTML = `
+    <div>You said: </div>
+    <span class="box">${msg}</span>
+  `;
+}
+
+
+function checkno(msg) {
+  const num = +msg;
+
+
+  if (Number.isNaN(num)) {
+    msg1.innerHTML += '<strong>That is not a valid number</strong>';
+    return;
+  }
+
+
+  if (num > 100 || num < 1) {
+    msg1.innerHTML += '<strong>Number must be between 1 and 100</strong>';
+    return;
+  }
+
+
+  if (num === randomNum) {
+    document.body.innerHTML = `
+    <img src="data:image/png;base64,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" />
+      <h2>Congrats! You have guessed the number! <br><br>
+      It was ${num}</h2>
+      <button id="play-again">Play Again</button>
+    `;
+  } else if (num > randomNum) {
+    msg1.innerHTML += '<div>go smaller</div>';
+  } else {
+    msg1.innerHTML += '<div>go bigger</div>';
+  }
+}
+
+
+function getRandomNumber() {
+  return Math.floor(Math.random() * 100) + 1;
+}
+
+
+recognition.addEventListener('result', onSpeak);
+
+
+recognition.addEventListener('end', () => recognition.start());
+
+document.body.addEventListener('click', e => {
+  if (e.target.id == 'play-again') {
+    window.location.reload();
+  }
+});
+
+
+       </script>
+
+    </div>
+    
+  </body>
+</html>
